@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: web
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: web
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/default: "true"
+        io.kompose.service: web
+    spec:
+      containers:
+        - args:
+            - bash
+            - ./wait-for-it.sh
+            - db:5432
+            - --
+            - flask
+            - run
+          env:
+            - name: DATABASE_URL
+              value: postgresql://postgres:password@db:5432/twitter_api_flask
+            - name: FLASK_ENV
+              value: development
+            - name: FLASK_RUN_HOST
+              value: 0.0.0.0
+          image: web
+          name: web
+          ports:
+            - containerPort: 5000
+          resources: {}
+          volumeMounts:
+            - mountPath: /code
+              name: web-claim0
+      restartPolicy: Always
+      volumes:
+        - name: web-claim0
+          persistentVolumeClaim:
+            claimName: web-claim0
+status: {}
